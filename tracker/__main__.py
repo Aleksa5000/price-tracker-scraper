@@ -2,8 +2,8 @@ import argparse
 import sys
 
 from . import storage
-from .alerts import send_alerts
-from .scraper import scrape
+from .alerts import send_alerts, send_failure_alert
+from .scraper import ScrapeError, scrape
 
 
 def print_report(changes):
@@ -36,7 +36,12 @@ def main(argv=None):
 
     conn = storage.connect(args.db)
     if args.cmd == "scrape":
-        products = scrape(args.pages, args.delay)
+        try:
+            products, skipped = scrape(args.pages, args.delay)
+        except ScrapeError as e:  # layout change or block page: store nothing, fail loudly
+            print(f"error: {e} No run was stored.", file=sys.stderr)
+            send_failure_alert(str(e))
+            return 1
         run_id = storage.save_run(conn, products)
         print(f"Run #{run_id}: stored {len(products)} products from {args.pages} page(s).")
         changes = storage.price_changes(conn)
@@ -44,6 +49,8 @@ def main(argv=None):
         sent = send_alerts(changes, args.threshold, args.drop_pct)
         if sent:
             print(f"Sent webhook alert for {sent} price drop(s).")
+        if skipped:
+            print(f"warning: skipped {skipped} malformed product card(s) in this run.", file=sys.stderr)
     elif args.cmd == "report":
         print_report(storage.price_changes(conn))
     else:
@@ -51,4 +58,4 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

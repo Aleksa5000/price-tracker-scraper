@@ -15,6 +15,7 @@ The demo targets [books.toscrape.com](https://books.toscrape.com), a site built 
 - Scrapes title, price, availability, star rating and URL, and follows pagination (`--pages N`)
 - Polite by design: custom User-Agent, delay between requests, retry with backoff on failure
 - Every run is stored in SQLite, so you get a complete price history, not just the latest snapshot
+- Layout-change protection: a product card with a missing field is skipped with a warning on stderr and counted at the end of the run; if a scrape finds no valid products at all (site redesign, block page), nothing is stored, the command exits with code 1 and the webhook (if configured) is notified
 - Detects price changes against the previous run and prints a drops/increases report
 - Exports the latest snapshot to CSV
 - Optional webhook alert (Slack/Discord-compatible) when a price falls below a threshold or by X%; silently skipped if no webhook is configured
@@ -80,6 +81,8 @@ python -m tracker scrape --pages 3 --drop-pct 10
 ```
 
 The payload carries both `text` (Slack) and `content` (Discord).
+
+The same webhook also gets a message when a scrape finds no valid products (the run is not stored and the exit code is 1).
 
 ## Running the tests
 
