@@ -99,7 +99,7 @@ Python 3.11+, requests, BeautifulSoup 4, SQLite (standard library), argparse, py
 
 ## License
 
-MIT
+All rights reserved. This is a portfolio sample: you can read and run the code to evaluate my work, but you may not use it commercially, redistribute it or build on it without my written permission. See [LICENSE](LICENSE).
 
 ---
 
